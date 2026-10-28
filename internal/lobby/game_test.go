@@ -327,7 +327,7 @@ func TestNextHandGathersAndPassesTheDeal(t *testing.T) {
 // TestSnapshotsHaveNoNullLists guards the client, which iterates these
 // lists: only objects that may be absent are allowed to be null.
 func TestSnapshotsHaveNoNullLists(t *testing.T) {
-	allowed := map[string]bool{"table": true, "cutOffer": true, "dealing": true, "score": true}
+	allowed := map[string]bool{"table": true, "cutOffer": true, "dealing": true, "score": true, "guide": true}
 	check := func(l *Lobby, id string) {
 		snap, _ := l.Snapshot(id)
 		var walk func(key string, v any)

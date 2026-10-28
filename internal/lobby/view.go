@@ -8,14 +8,15 @@ import (
 // view is one player's snapshot. It's built per recipient: nothing in it is
 // meant for anyone else.
 type view struct {
-	Type  string      `json:"type"` // always "state"
-	Rev   uint64      `json:"rev"`
-	You   string      `json:"you"`
-	Lobby viewLobby   `json:"lobby"`
-	Log   []LogEntry  `json:"log"`
-	Table *table.View `json:"table"`
-	Undo  string      `json:"undo,omitempty"` // what the viewer can undo right now
-	Score *scoreView  `json:"score"`
+	Type  string         `json:"type"` // always "state"
+	Rev   uint64         `json:"rev"`
+	You   string         `json:"you"`
+	Lobby viewLobby      `json:"lobby"`
+	Log   []LogEntry     `json:"log"`
+	Table *table.View    `json:"table"`
+	Undo  string         `json:"undo,omitempty"` // what the viewer can undo right now
+	Score *scoreView     `json:"score"`
+	Guide *presets.Guide `json:"guide"`
 }
 
 type viewLobby struct {
@@ -64,6 +65,7 @@ func (l *Lobby) snapshot(p *Player) []byte {
 	if g := l.game; g != nil && l.State == Playing {
 		tv := g.table.ViewFor(p.ID)
 		v.Table = &tv
+		v.Guide = l.guideFor(p.ID)
 		if g.undo != nil && g.undo.rev == l.rev && g.undo.actor == p.ID {
 			v.Undo = g.undo.text
 		}

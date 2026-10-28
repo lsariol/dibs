@@ -16,6 +16,7 @@ type View struct {
 	Dealing    *DealView         `json:"dealing"`
 	Markers    map[string]string `json:"markers"`
 	Counters   map[string]int    `json:"counters"`
+	Teams      map[string]string `json:"teams"`
 }
 
 // ContainerView is a container as the viewer sees it.
@@ -71,6 +72,7 @@ func (t *Table) ViewFor(viewer string) View {
 		CutOffer:  t.CutOffer,
 		Markers:   t.Markers,
 		Counters:  t.Counters,
+		Teams:     t.Teams,
 	}
 	if t.Turn >= 0 && t.Turn < len(t.Seats) {
 		v.Turn = t.Seats[t.Turn]

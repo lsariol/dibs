@@ -41,12 +41,11 @@ type Preset interface {
 }
 
 var registry = map[string]Preset{}
-var order []string
 
-func register(p Preset) {
-	registry[p.Info().ID] = p
-	order = append(order, p.Info().ID)
-}
+// order is how presets are listed; Euchre, the most played at the table, first.
+var order = []string{"euchre", "holdem", "golf", "blackjack", "blank"}
+
+func register(p Preset) { registry[p.Info().ID] = p }
 
 // Get returns a preset by ID, or nil.
 func Get(id string) Preset { return registry[id] }
@@ -55,7 +54,9 @@ func Get(id string) Preset { return registry[id] }
 func All() []Preset {
 	out := make([]Preset, 0, len(order))
 	for _, id := range order {
-		out = append(out, registry[id])
+		if p := registry[id]; p != nil {
+			out = append(out, p)
+		}
 	}
 	return out
 }

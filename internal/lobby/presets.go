@@ -9,6 +9,9 @@ func validatePreset(s *Settings) error {
 		return errorf(CodeInvalid, "Unknown game %q.", s.Preset)
 	}
 	info := p.Info()
+	if s.ScoreMode == "" {
+		s.ScoreMode = info.ScoreMode
+	}
 	if s.MaxPlayers > info.MaxPlayers {
 		s.MaxPlayers = info.MaxPlayers
 	}

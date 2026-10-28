@@ -218,3 +218,8 @@ input[type=range] { padding: 0; min-height: var(--tap); }
 .log li { display: flex; gap: 8px; align-items: center; }
 .sheet .log .btn { width: auto; }
 .win { font-weight: 700; color: var(--accent); font-size: 18px; }
+.guide { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+.guide p { margin: 0; }
+.guide-status { font-weight: 600; }
+.guide-hint { color: var(--muted); font-size: 14px; }
+.guide-steps { display: flex; flex-wrap: wrap; gap: 6px; }

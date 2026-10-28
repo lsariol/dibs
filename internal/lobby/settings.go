@@ -46,9 +46,7 @@ func (s *Settings) validate() error {
 		return errorf(CodeInvalid, "A lobby holds %d to %d players.", MinPlayers, MaxPlayers)
 	}
 	switch s.ScoreMode {
-	case "":
-		s.ScoreMode = ScoreOwner
-	case ScoreSolo, ScoreTeam, ScoreOwner:
+	case "", ScoreSolo, ScoreTeam, ScoreOwner: // "" takes the game's default
 	default:
 		return errorf(CodeInvalid, "Score mode must be solo, team or owner.")
 	}
