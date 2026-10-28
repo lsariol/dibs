@@ -1,0 +1,38 @@
+name: dibs
+
+x-lighthouse:
+  deploy: releases
+
+# Dibs has no secrets and keeps everything in memory: every setting below is
+# a plain value, and there's nothing to mount.
+
+services:
+  dibs:
+    build: .
+    container_name: dibs
+    command: ["/dibs", "serve"]
+    restart: unless-stopped
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    expose: ["2600"]                   # cloudflared routes dibs.mobasity.com to http://dibs:2600; not published
+    labels:
+      com.mobasity.public-url: https://dibs.mobasity.com
+    environment:
+      - DIBS_ADDR=:2600
+      - DIBS_PUBLIC_URL=https://dibs.mobasity.com
+      - DIBS_CLIENT_IP_HEADER=CF-Connecting-IP   # set by Cloudflare; the port is reachable only on spark
+      - DIBS_VERSION=${LIGHTHOUSE_DEPLOY_VERSION:-dev}
+    healthcheck:
+      test: ["CMD", "/dibs", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks: [spark]
+
+networks:
+  spark:
+    external: true

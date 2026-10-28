@@ -1,0 +1,64 @@
+/* Dibs: plain, phone-first styles. Colors are tokens so a redesign only touches this file. */
+:root {
+  --bg: #f4f4f1;
+  --panel: #ffffff;
+  --text: #1d1d1b;
+  --muted: #6b6b66;
+  --line: #d6d6cf;
+  --accent: #1f6f4a;
+  --accent-text: #ffffff;
+  --danger: #b3261e;
+  --card: #ffffff;
+  --card-back: #2d4f8a;
+  --red: #c0262d;
+  --black: #1d1d1b;
+  --felt: #e6efe8;
+  --focus: #f0b400;
+  --radius: 10px;
+  --tap: 44px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161716;
+    --panel: #212321;
+    --text: #ececea;
+    --muted: #9a9b96;
+    --line: #3a3c39;
+    --accent: #3fa877;
+    --accent-text: #0b0c0b;
+    --danger: #ef6b62;
+    --card: #f7f7f4;
+    --card-back: #3b62a8;
+    --felt: #1c2a21;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+body.center { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; }
+h1, h2, h3 { line-height: 1.2; }
+a { color: var(--accent); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: var(--tap); padding: 0 16px;
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  background: var(--accent); color: var(--accent-text);
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.btn.secondary { background: transparent; color: var(--accent); }
+.btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.btn.small { min-height: 36px; padding: 0 10px; font-size: 14px; }
+.btn.big { width: 100%; min-height: 56px; font-size: 18px; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.landing { width: min(320px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 16px; text-align: center; }
+.logo { font-size: 56px; font-weight: 800; letter-spacing: -2px; margin: 0 0 24px; }

@@ -1,0 +1,10 @@
+.dev/
+.env
+/dibs
+/dibs.exe
+*.test
+*.out
+coverage.*
+.vscode/
+.idea/
+DIBS_IMPLEMENTATION_BRIEF.md
