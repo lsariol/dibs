@@ -1,8 +1,9 @@
 // Entry point: connects, keeps the newest snapshot and redraws on change.
 import { Net } from './net.js';
-import { h, btn, toast, sheet, closeSheet, confirmThen } from './ui.js';
-import { renderLobby, settingsSummary } from './lobby.js';
+import { h, btn, toast, sheet, closeSheet, confirmThen, refreshLiveSheet } from './ui.js';
+import { renderLobby, settingsSummary, setPresets } from './lobby.js';
 import { renderTable } from './table.js';
+import { openScoreboard } from './score.js';
 
 const root = document.getElementById('app');
 
@@ -46,9 +47,17 @@ function render() {
   }
   const s = app.state;
   if (!s) return;
-  const body = s.lobby.state === 'playing' && s.table ? renderTable(app) : renderLobby(app);
+  let body;
+  try {
+    setPresets(s.lobby.presets);
+    body = s.lobby.state === 'playing' && s.table ? renderTable(app) : renderLobby(app);
+  } catch (err) {
+    console.error('dibs: drawing the table failed', err);
+    body = h('main', { class: 'page' }, h('p', { class: 'error' }, 'Something went wrong drawing the table. Reload the page; your cards are safe on the server.'));
+  }
   root.replaceChildren(header(s), body);
   renderStatus();
+  refreshLiveSheet();
 }
 
 function header(s) {
@@ -90,7 +99,7 @@ function openMenu() {
     btn('Share link', () => { closeSheet(); share(); }, 'secondary'),
     btn('History', () => openLog(), 'secondary'),
   ];
-  if (s.score) items.push(btn('Scoreboard', () => import('./score.js').then((m) => m.openScoreboard(app)), 'secondary'));
+  if (s.score) items.push(btn('Scoreboard', () => openScoreboard(app), 'secondary'));
   if (app.isOwner() && s.lobby.state === 'playing') {
     items.push(btn('Back to the lobby', () => confirmThen('Return everyone to the lobby? The table is cleared; scores are kept.', () => app.act('table.stop')), 'secondary'));
   }

@@ -323,3 +323,38 @@ func TestNextHandGathersAndPassesTheDeal(t *testing.T) {
 	}
 	noLeaks(t, l, ids)
 }
+
+// TestSnapshotsHaveNoNullLists guards the client, which iterates these
+// lists: only objects that may be absent are allowed to be null.
+func TestSnapshotsHaveNoNullLists(t *testing.T) {
+	allowed := map[string]bool{"table": true, "cutOffer": true, "dealing": true, "score": true}
+	check := func(l *Lobby, id string) {
+		snap, _ := l.Snapshot(id)
+		var walk func(key string, v any)
+		walk = func(key string, v any) {
+			switch x := v.(type) {
+			case nil:
+				if !allowed[key] {
+					t.Fatalf("%q is null in a snapshot", key)
+				}
+			case map[string]any:
+				for k, vv := range x {
+					walk(k, vv)
+				}
+			case []any:
+				for _, vv := range x {
+					walk(key, vv)
+				}
+			}
+		}
+		var v any
+		_ = json.Unmarshal(snap, &v)
+		walk("", v)
+	}
+	_, l, ids := newLobby(t, Settings{}, "Ann", "Bob")
+	check(l, ids[0])
+	mustOK(t, l.Do(ids[0], req("table.start", nil)))
+	check(l, ids[0])
+	mustOK(t, l.Do(ids[0], req("score.add", map[string]any{"entry": ids[1], "delta": 1})))
+	check(l, ids[1])
+}

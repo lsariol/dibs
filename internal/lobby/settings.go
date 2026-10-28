@@ -29,8 +29,8 @@ type Settings struct {
 
 // Custom is a deck made of chosen standard ranks and suits.
 type Custom struct {
-	Ranks  []string `json:"ranks"`
-	Suits  []string `json:"suits"`
+	Ranks  []string `json:"ranks,omitempty"`
+	Suits  []string `json:"suits,omitempty"`
 	Jokers int      `json:"jokers"`
 }
 

@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/lsariol/dibs/internal/random"
+	"github.com/lsariol/dibs/internal/scoring"
 )
 
 // Limits on lobbies and players.
@@ -92,7 +93,8 @@ type Lobby struct {
 	noConnsAt time.Time // when the last connection closed; zero while anyone is connected
 	shareURL  string
 	now       func() time.Time
-	game      *game // the running table, while Playing
+	game      *game          // the running table, while Playing
+	score     *scoring.Board // kept across tables until the lobby ends
 }
 
 func hashToken(token string) [32]byte { return sha256.Sum256([]byte(token)) }
