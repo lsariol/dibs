@@ -16,5 +16,5 @@ RUN CGO_ENABLED=1 go test -race -count=1 ./...
 FROM alpine:3.24
 COPY --from=builder /app/dibs /dibs
 USER 10001:10001
-EXPOSE 2600
+EXPOSE 3180
 CMD ["/dibs", "serve"]

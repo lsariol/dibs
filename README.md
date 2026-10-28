@@ -17,16 +17,16 @@ Needs Go 1.27.3; Docker Desktop for the container run. Run the commands in Git B
 APP_ENV=dev go run ./cmd/dibs serve        # PowerShell: $env:APP_ENV="dev"; go run ./cmd/dibs serve
 ```
 
-Success: the log shows `Dibs ready addr=[::]:2600`, and http://localhost:2600 shows the landing page with Create Lobby and Join Lobby. To play several players on one PC, give each its own browser profile or private window (each is a separate player), or open one on `http://localhost:2600` and another on `http://127.0.0.1:2600`. Phones on the same Wi-Fi can join at `http://<the PC's address>:2600` if Windows Firewall lets Go through: the server accepts any page served from the address the phone used.
+Success: the log shows `Dibs ready addr=[::]:3181`, and http://localhost:3181 shows the landing page with Create Lobby and Join Lobby. To play several players on one PC, give each its own browser profile or private window (each is a separate player), or open one on `http://localhost:3181` and another on `http://127.0.0.1:3181`. Phones on the same Wi-Fi can join at `http://<the PC's address>:3181` if Windows Firewall lets Go through: the server accepts any page served from the address the phone used.
 
-In Docker, as Lighthouse runs it, published on `127.0.0.1:2601`:
+In Docker, as Lighthouse runs it, published on `127.0.0.1:3181`:
 
 ```bash
 docker network create spark                # once, if it doesn't exist yet
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-Success: `docker ps` shows `dibs` as `healthy`, and http://localhost:2601 loads.
+Success: `docker ps` shows `dibs` as `healthy`, and http://localhost:3181 loads.
 
 Nothing is written to disk: lobbies live in memory and end when the server stops.
 
@@ -49,7 +49,7 @@ All plain values, set in the compose file. Dibs has no secrets and nothing in Co
 | Variable | Default | Meaning |
 |---|---|---|
 | `APP_ENV` | `prod` | `dev` adds debug logs, turns off static-file caching, and makes `http://localhost:<port>` the default public URL |
-| `DIBS_ADDR` | `:2600` | Listen address |
+| `DIBS_ADDR` | `:3180` (`:3181` in dev) | Listen address |
 | `DIBS_PUBLIC_URL` | `https://dibs.mobasity.com` | The address players open: share links, the cookie's `Secure` flag, HSTS and the WebSocket origin check use it |
 | `DIBS_CLIENT_IP_HEADER` | empty | Header with the real client address behind a proxy (`CF-Connecting-IP` in prod), for rate limits. Only set it when the port can't be reached around the proxy |
 | `DIBS_VERSION` | `dev-<commit>` | The version shown by `/health`; the compose file passes Lighthouse's deploy version |

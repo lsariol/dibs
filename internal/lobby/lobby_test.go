@@ -57,7 +57,7 @@ func mustFail(t *testing.T, r Response, code string) {
 // newLobby makes a lobby with an owner and n-1 more players.
 func newLobby(t *testing.T, s Settings, names ...string) (*Manager, *Lobby, []string) {
 	t.Helper()
-	m := NewManager("http://localhost:2600")
+	m := NewManager("http://localhost:3180")
 	l, owner, _, err := m.Create(names[0], s)
 	if err != nil {
 		t.Fatal(err)

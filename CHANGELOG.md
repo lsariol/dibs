@@ -2,6 +2,11 @@
 
 All notable changes to Dibs. Versions follow [semantic versioning](https://semver.org).
 
+## v0.0.1 (2026-10-28)
+
+### Changed
+- Dibs now listens on port 3180 in production (cloudflared routes `dibs.mobasity.com` to `http://dibs:3180`), and on 3181 for local development, both with `go run` and the Docker dev setup.
+
 ## v0.0.0 (2026-10-28)
 
 The first version: a multiplayer card table for phones, at dibs.mobasity.com.
