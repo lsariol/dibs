@@ -134,8 +134,9 @@ function containerEl(c) {
       top ? cardEl(top, { onclick: () => cardSheet(c, top) }) : h('button', { type: 'button', class: 'card empty', onclick: () => pileSheet(c), 'aria-label': 'empty pile' }),
       c.count > 1 ? h('span', { class: 'depth', 'aria-hidden': 'true' }) : null);
   } else if (c.kind === 'grid') {
-    body = h('div', { class: 'grid', style: `--cols:${c.cols || 3}` },
+    body = h('div', { class: 'grid' },
       c.cards.map((cv) => cardEl(cv, { onclick: () => (cv.empty ? pileSheet(c, cv.i) : cardSheet(c, cv)) })));
+    body.style.setProperty('--cols', c.cols || 3);
   } else if (c.kind === 'hand' && !mine) {
     body = h('div', { class: 'row-cards compact' },
       c.cards.map((cv) => cardEl(cv, { small: true, onclick: () => (cv.def ? cardSheet(c, cv) : blindSheet(c)) })));
@@ -363,6 +364,10 @@ function actionBar() {
   const me = app.state.you;
   const items = [];
   const isDealer = T.dealer === me;
+  const deck = T.containers.find((c) => c.id === 'deck') || T.containers.find((c) => !c.owner && c.kind === 'stack');
+  if ((isDealer || app.isOwner()) && deck) {
+    items.push(btn('Next hand', () => confirmThen(`Gather every card into ${deck.label} and pass the deal to the left?`, () => app.act('round.next', { to: deck.id })), 'small'));
+  }
   if (isDealer || app.isOwner()) items.push(btn('Pass the deal', () => run('dealer.pass'), 'small secondary'));
   if (!T.dealer || isDealer || app.isOwner()) items.push(btn('Choose dealer', () => choosePlayer('Who deals?', (p) => run('dealer.set', { player: p })), 'small secondary'));
   if (T.turn) items.push(btn('Next turn', () => run('turn.advance', { dir: 1 }), 'small secondary'));

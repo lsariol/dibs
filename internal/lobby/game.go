@@ -309,6 +309,24 @@ func init() {
 		}
 		return t.SetDealer(c.p.ID, a.Player, c.isOwner())
 	}))
+	register("round.next", onTable(false, func(c *actx, t *table.Table) error {
+		var a struct {
+			To string `json:"to"`
+		}
+		if err := decode(c, &a); err != nil {
+			return err
+		}
+		if !c.isOwner() && c.p.ID != t.DealerID() {
+			return errorf(CodeForbidden, "Only the dealer or the lobby owner can start the next hand.")
+		}
+		if err := t.CollectAll(c.p.ID, a.To, true); err != nil {
+			return err
+		}
+		if t.DealerID() != "" {
+			return t.PassDeal(c.p.ID, true)
+		}
+		return nil
+	}))
 	register("dealer.pass", onTable(true, func(c *actx, t *table.Table) error {
 		return t.PassDeal(c.p.ID, c.isOwner())
 	}))
