@@ -47,7 +47,9 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 
 	c := &conn{ws: ws, stateReady: make(chan struct{}, 1), results: make(chan []byte, wsResultQueue), done: make(chan struct{})}
 	if err := l.Attach(playerID, c); err != nil {
-		ws.Close(websocket.StatusPolicyViolation, "not in this lobby")
+		b, _ := json.Marshal(map[string]string{"type": "ended", "reason": err.Error()})
+		_ = ws.Write(r.Context(), websocket.MessageText, b)
+		ws.Close(websocket.StatusPolicyViolation, "refused")
 		return
 	}
 	defer l.Detach(playerID, c)

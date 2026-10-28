@@ -74,7 +74,7 @@ func (s *Server) Handler() http.Handler {
 	if err := csrf.AddTrustedOrigin(s.cfg.PublicURL.String()); err != nil {
 		s.log.Warn("server: public URL isn't a valid trusted origin", "err", err)
 	}
-	return securityHeaders(csrf.Handler(s.mux))
+	return securityHeaders(csrf.Handler(s.mux), s.cfg.SecureCookies())
 }
 
 // Lobbies is the lobby manager, for tests.
@@ -127,9 +127,12 @@ func (s *Server) handleLanding(w http.ResponseWriter, r *http.Request) {
 
 // securityHeaders sets headers every response gets: a strict CSP (no inline
 // scripts, same-origin only), no framing, no sniffing, no referrer leaks.
-func securityHeaders(next http.Handler) http.Handler {
+func securityHeaders(next http.Handler, https bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
+		if https {
+			h.Set("Strict-Transport-Security", "max-age=31536000")
+		}
 		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")

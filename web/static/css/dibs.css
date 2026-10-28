@@ -68,7 +68,7 @@ a { color: var(--accent); }
 .home { display: inline-block; font-weight: 800; font-size: 22px; text-decoration: none; color: var(--text); margin-bottom: 8px; }
 .form, .stack { display: flex; flex-direction: column; gap: 14px; }
 .form label, .field { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
-.form small, .field small, .small { font-weight: 400; color: var(--muted); font-size: 13px; }
+.form small, .field small, .small:not(.btn) { font-weight: 400; color: var(--muted); font-size: 13px; }
 input, select {
   font: inherit; min-height: var(--tap); padding: 0 12px; width: 100%;
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--text);
@@ -146,7 +146,7 @@ body.app { padding-bottom: env(safe-area-inset-bottom); }
 .log time { color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* Table */
-.table { width: min(720px, 100%); margin: 0 auto; padding: 8px 12px 96px; display: flex; flex-direction: column; gap: 10px; }
+.table { width: min(720px, 100%); margin: 0 auto; padding: 8px 12px 76px; display: flex; flex-direction: column; gap: 10px; }
 .banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
 .banner.attention { border-color: var(--focus); border-width: 2px; }
 .strip { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -223,3 +223,24 @@ input[type=range] { padding: 0; min-height: var(--tap); }
 .guide-status { font-weight: 600; }
 .guide-hint { color: var(--muted); font-size: 14px; }
 .guide-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Compact rows for the other players, and banners that stay in view */
+.banners { position: sticky; top: 53px; z-index: 3; display: flex; flex-direction: column; gap: 6px; }
+.other { padding: 4px 10px; gap: 4px 12px; }
+.other .container { display: flex; align-items: center; gap: 6px; }
+.other .c-head { margin: 0; }
+.other .c-label { font-weight: 400; font-size: 14px; min-height: 28px; }
+.other .card.small { width: 20px; height: 29px; border-radius: 3px; font-size: 9px; }
+.other .card.small .suit { font-size: 9px; }
+.other .row-cards.compact { gap: 1px; }
+
+/* Narrow phones (320-360px): a five-card board and 8 cards in a hand still fit */
+@media (max-width: 360px) {
+  .table { padding-left: 8px; padding-right: 8px; }
+  .felt { padding: 8px; }
+  .card { width: 44px; height: 63px; font-size: 16px; }
+  .hand .card { width: 46px; height: 66px; }
+  .card .suit { font-size: 17px; }
+}
+.other .card.small.face { width: 30px; height: 42px; font-size: 12px; }
+.other .card.small.face .suit { font-size: 12px; }

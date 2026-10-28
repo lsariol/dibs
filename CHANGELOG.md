@@ -31,5 +31,6 @@ The first version: a multiplayer card table for phones, at dibs.mobasity.com.
 - A scoreboard for players or teams, with a target score, quick +1/−1, points with a reason, a history of every change, and one-tap corrections. Scores carry over when the table is reset.
 - Three score rules, chosen when the lobby is made: solo (everyone changes only their own score), team (one scorekeeper per team, appointed by the owner), or owner only. The server enforces them on every change.
 - A history of everything that happened at the table, naming only cards everyone could see.
+- Built for phones held upright, from 320 px wide, in light and dark mode, with large tap targets.
 - A health endpoint, `/health`, reporting the running version.
 - Docker image and compose file for Lighthouse: tests run before every deploy, the container runs read-only as a non-root user, and the site is reached only through Cloudflare.

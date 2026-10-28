@@ -106,7 +106,7 @@ function settingsSheet(app) {
   const s = app.state.lobby.settings;
   const preset = select(Object.entries(presetNames), s.preset);
   const max = select([2, 3, 4, 5, 6, 7, 8].map((n) => [n, String(n)]), s.maxPlayers);
-  const score = select([['team', 'Team scorekeepers'], ['owner', 'Owner only'], ['solo', 'Everyone their own']], s.scoreMode);
+  const score = select([['', 'Usual for the game'], ['team', 'Team scorekeepers'], ['owner', 'Owner only'], ['solo', 'Everyone their own']], s.scoreMode);
   const policy = select([['strict', 'Dealer runs the deck'], ['shared', 'Anyone manages shared piles']], s.policy);
   const deck = select([['standard52', 'Standard 52'], ['standard54', 'Standard 54 (jokers)'], ['euchre24', 'Euchre 24'], ['color108', 'Color deck (108)']], s.deckType || 'standard52');
   const decks = select([1, 2, 3, 4, 5, 6, 7, 8].map((n) => [n, String(n)]), s.deckCount);

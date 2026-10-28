@@ -17,13 +17,14 @@ export function renderTable(a) {
   const mine = T.containers.filter((c) => c.owner === me);
   const seatedMe = T.seats.includes(me);
 
+  const b = banners();
   return h('main', { class: 'table' },
-    banners(),
+    b.length ? h('div', { class: 'banners' }, b) : null,
     playersStrip(),
     scoreStrip(app),
-    guideBar(app),
     h('section', { class: 'felt', 'aria-label': 'Shared table' }, shared.map(containerEl)),
     othersEl(),
+    guideBar(app),
     seatedMe ? h('section', { class: 'mine', 'aria-label': 'Your cards' }, mine.map(containerEl)) :
       h('p', { class: 'muted center-text' }, 'You are watching. The owner can seat you from the lobby.'),
     actionBar());
@@ -125,8 +126,8 @@ function othersEl() {
 function containerEl(c) {
   const mine = c.owner === app.state.you;
   const head = h('div', { class: 'c-head' },
-    h('button', { type: 'button', class: 'c-label', onclick: () => pileSheet(c) },
-      containerName(c), h('span', { class: 'count' }, ` ${c.count}`)),
+    h('button', { type: 'button', class: 'c-label', onclick: () => pileSheet(c), 'aria-label': `${containerName(c)}, ${c.count} cards` },
+      c.owner && !mine ? c.label : containerName(c), h('span', { class: 'count' }, ` ${c.count}`)),
     mine && c.kind === 'hand' ? h('span', { class: 'muted small' }, 'only you see these') : null);
 
   let body;
@@ -362,21 +363,32 @@ function expand(p, n) { return Array.from({ length: n }, (_, i) => p[i % p.lengt
 
 // ---------- bottom bar ----------
 
+// actionBar is one row: the next hand for the dealer, the turn marker, and
+// everything else behind "Table…".
 function actionBar() {
   const me = app.state.you;
-  const items = [];
   const isDealer = T.dealer === me;
   const deck = T.containers.find((c) => c.id === 'deck') || T.containers.find((c) => !c.owner && c.kind === 'stack');
+  const items = [];
   if ((isDealer || app.isOwner()) && deck) {
     items.push(btn('Next hand', () => confirmThen(`Gather every card into ${deck.label} and pass the deal to the left?`, () => app.act('round.next', { to: deck.id })), 'small'));
   }
-  if (isDealer || app.isOwner()) items.push(btn('Pass the deal', () => run('dealer.pass'), 'small secondary'));
-  if (!T.dealer || isDealer || app.isOwner()) items.push(btn('Choose dealer', () => choosePlayer('Who deals?', (p) => run('dealer.set', { player: p })), 'small secondary'));
   if (T.turn) items.push(btn('Next turn', () => run('turn.advance', { dir: 1 }), 'small secondary'));
-  else items.push(btn('Show turns', () => choosePlayer('Whose turn is it?', (p) => run('turn.set', { player: p })), 'small secondary'));
-  if (isDealer || app.isOwner() || T.policy === 'shared') items.push(btn('Add a pile', addPileSheet, 'small secondary'));
-  if (app.isOwner()) items.push(btn('Fresh table', () => confirmThen('Start over with fresh cards and the same seats? Scores are kept.', () => app.act('table.reset')), 'small secondary'));
+  items.push(btn('Table…', tableSheet, 'small secondary'));
   return h('nav', { class: 'actionbar', 'aria-label': 'Table actions' }, items);
+}
+
+function tableSheet() {
+  const me = app.state.you;
+  const isDealer = T.dealer === me;
+  const items = [];
+  if (isDealer || app.isOwner()) items.push(btn('Pass the deal to the left', () => run('dealer.pass'), 'secondary'));
+  if (!T.dealer || isDealer || app.isOwner()) items.push(btn('Choose the dealer', () => choosePlayer('Who deals?', (p) => run('dealer.set', { player: p })), 'secondary'));
+  items.push(btn(T.turn ? 'Change whose turn it is' : 'Show whose turn it is', () => choosePlayer('Whose turn is it?', (p) => run('turn.set', { player: p })), 'secondary'));
+  if (T.turn) items.push(btn('Stop showing turns', () => run('turn.set', { player: '' }), 'secondary'));
+  if (isDealer || app.isOwner() || T.policy === 'shared') items.push(btn('Add a pile', addPileSheet, 'secondary'));
+  if (app.isOwner()) items.push(btn('Fresh table (same seats, scores kept)', () => confirmThen('Start over with fresh cards and the same seats? Scores are kept.', () => app.act('table.reset')), 'secondary'));
+  sheet('Table', h('div', { class: 'stack' }, items));
 }
 
 function choosePlayer(title, fn) {
