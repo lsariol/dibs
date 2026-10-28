@@ -455,6 +455,9 @@ func (t *Table) Draw(actor, from, to string, count int, face Face) error {
 	if !t.IsSeated(actor) {
 		return fail(errForbidden, "Only seated players can draw.")
 	}
+	if err := t.need(t.allowed(actor, src, src.Take), "You can't take cards from %s.", t.LabelOf(src)); err != nil {
+		return err
+	}
 	if to == "" {
 		to = t.HandOf(actor)
 	}
@@ -464,9 +467,6 @@ func (t *Table) Draw(actor, from, to string, count int, face Face) error {
 	}
 	if count < 1 || count > 52 {
 		return fail(errBad, "Draw 1 to 52 cards.")
-	}
-	if err := t.need(t.allowed(actor, src, src.Take), "You can't take cards from %s.", t.LabelOf(src)); err != nil {
-		return err
 	}
 	if err := t.need(t.canPlace(actor, dst), "You can't put cards in %s.", t.LabelOf(dst)); err != nil {
 		return err

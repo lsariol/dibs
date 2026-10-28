@@ -88,6 +88,7 @@ type Table struct {
 	Dealing        *PendingDeal        // a step-by-step deal in progress, if any
 	Markers        map[string]string   // game markers (trump, maker, …), shown to everyone
 	Counters       map[string]int      // game counters (tricks taken, …), shown to everyone
+	Teams          map[string]string   // player ID -> team, for partnership games; public
 	Rev            uint64              // the revision the current action will produce
 	Name           func(string) string `json:"-"` // a player's display name, for history lines
 	events         []Event
@@ -111,6 +112,7 @@ func New(seats []string, policy Policy) *Table {
 		Policy:   policy,
 		Markers:  map[string]string{},
 		Counters: map[string]int{},
+		Teams:    map[string]string{},
 		Name:     func(id string) string { return id },
 		byID:     map[string]*Container{},
 	}
@@ -184,6 +186,7 @@ func (t *Table) Clone() *Table {
 	n.Seats = slices.Clone(t.Seats)
 	n.Markers = maps.Clone(t.Markers)
 	n.Counters = maps.Clone(t.Counters)
+	n.Teams = maps.Clone(t.Teams)
 	if t.CutOffer != nil {
 		o := *t.CutOffer
 		n.CutOffer = &o
@@ -201,6 +204,10 @@ func (t *Table) TakeEvents() []Event {
 	t.events = nil
 	return e
 }
+
+// Logf adds a public history line; presets use it for their own steps. It
+// must never name a hidden card.
+func (t *Table) Logf(actor, format string, args ...any) { t.logf(actor, format, args...) }
 
 func (t *Table) logf(actor, format string, args ...any) {
 	t.events = append(t.events, Event{Actor: actor, Text: fmt.Sprintf(format, args...)})

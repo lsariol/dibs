@@ -246,6 +246,41 @@ func passesText(p DealPlan) string {
 	return plural(len(p.Passes), "pass", "passes") + " (" + strings.Join(parts, ", ") + ")"
 }
 
+// Transfer moves the top n cards of one container to another without
+// checking the actor's access: for presets running a procedure they have
+// already authorized (a Blackjack hit). It's logged like any deal.
+func (t *Table) Transfer(by, from, to string, n int, face Face) error {
+	src, dst := t.byID[from], t.byID[to]
+	if src == nil || dst == nil || src == dst {
+		return fail(errNotFound, "That pile isn't on the table.")
+	}
+	for _, c := range []*Container{src, dst} {
+		if err := t.blocked(c); err != nil {
+			return err
+		}
+	}
+	if src.Count() < n {
+		return fail(errInvalid, "%s has only %s.", t.LabelOf(src), plural(src.Count(), "card", "cards"))
+	}
+	var public []string
+	for range n {
+		id := src.removeAt(src.top())
+		if err := t.put(dst, id, -1, face); err != nil {
+			return err
+		}
+		if t.Cards[id].FaceUp {
+			public = append(public, t.Cards[id].Def.Label())
+		}
+	}
+	src.ModRev = t.Rev
+	note := ""
+	if len(public) > 0 {
+		note = ": " + strings.Join(public, " ")
+	}
+	t.logf(by, "%s dealt %s from %s to %s%s.", t.Name(by), plural(n, "card", "cards"), t.LabelOf(src), t.LabelOf(dst), note)
+	return nil
+}
+
 // DealOrder returns the seated players in dealing order: starting from the
 // dealer's left going clockwise (dir 1), or the dealer's right going
 // counterclockwise (dir -1). With no dealer it starts at the first seat.
