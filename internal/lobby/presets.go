@@ -1,26 +1,14 @@
 package lobby
 
-// presetInfo is what the lobby needs to know about a preset before the table exists.
-type presetInfo struct {
-	Name       string
-	MinPlayers int
-	MaxPlayers int
-}
-
-var presetList = map[string]presetInfo{
-	"blank":     {"Blank table", 2, 8},
-	"euchre":    {"Euchre", 4, 4},
-	"holdem":    {"Texas Hold'em", 2, 8},
-	"golf":      {"Six-card Golf", 2, 8},
-	"blackjack": {"Blackjack", 2, 8},
-}
+import "github.com/lsariol/dibs/internal/presets"
 
 // validatePreset checks the preset exists and fits the player limit.
 func validatePreset(s *Settings) error {
-	info, ok := presetList[s.Preset]
-	if !ok {
+	p := presets.Get(s.Preset)
+	if p == nil {
 		return errorf(CodeInvalid, "Unknown game %q.", s.Preset)
 	}
+	info := p.Info()
 	if s.MaxPlayers > info.MaxPlayers {
 		s.MaxPlayers = info.MaxPlayers
 	}

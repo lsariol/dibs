@@ -102,20 +102,13 @@ func TestLobbyFull(t *testing.T) {
 	}
 }
 
-func TestEuchreIsFourPlayers(t *testing.T) {
+func TestPresetLimits(t *testing.T) {
 	m := NewManager("x")
-	l, _, _, err := m.Create("Ann", Settings{Preset: "euchre", MaxPlayers: 8})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if l.Settings.MaxPlayers != 4 {
-		t.Fatalf("euchre max players %d", l.Settings.MaxPlayers)
-	}
-	if _, _, _, err := m.Create("Ann", Settings{Preset: "euchre", MaxPlayers: 3}); err == nil {
-		t.Fatal("3-player euchre accepted")
-	}
 	if _, _, _, err := m.Create("Ann", Settings{Preset: "chess"}); err == nil {
 		t.Fatal("unknown preset accepted")
+	}
+	if _, _, _, err := m.Create("Ann", Settings{Preset: "blank", MaxPlayers: 1}); err == nil {
+		t.Fatal("1-player lobby accepted")
 	}
 }
 
@@ -285,10 +278,10 @@ func TestSweepIdle(t *testing.T) {
 
 func TestSettingsOwnerOnly(t *testing.T) {
 	_, l, ids := newLobby(t, Settings{}, "Ann", "Bob", "Cy")
-	mustFail(t, l.Do(ids[1], req("lobby.settings", Settings{Preset: "golf"})), CodeForbidden)
-	mustFail(t, l.Do(ids[0], req("lobby.settings", Settings{Preset: "golf", MaxPlayers: 2})), CodeInvalid)
-	mustOK(t, l.Do(ids[0], req("lobby.settings", Settings{Preset: "golf", MaxPlayers: 5, ScoreMode: ScoreSolo})))
-	if l.Settings.Preset != "golf" || l.Settings.ScoreMode != ScoreSolo {
+	mustFail(t, l.Do(ids[1], req("lobby.settings", Settings{Preset: "blank"})), CodeForbidden)
+	mustFail(t, l.Do(ids[0], req("lobby.settings", Settings{Preset: "blank", MaxPlayers: 2})), CodeInvalid)
+	mustOK(t, l.Do(ids[0], req("lobby.settings", Settings{Preset: "blank", MaxPlayers: 5, ScoreMode: ScoreSolo})))
+	if l.Settings.MaxPlayers != 5 || l.Settings.ScoreMode != ScoreSolo {
 		t.Fatalf("settings %+v", l.Settings)
 	}
 }

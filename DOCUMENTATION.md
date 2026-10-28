@@ -17,6 +17,9 @@ One Go binary (`cmd/dibs`) serves server-rendered pages, static files and one We
 | `internal/config` | Reads the settings from the environment |
 | `internal/random` | Unpredictable codes, tokens and IDs from `crypto/rand` |
 | `internal/lobby` | Lobbies, players, sessions, seats, teams, owner controls; the per-lobby lock every action goes through; per-player snapshots |
+| `internal/cards` | Card faces (definitions) and decks of unique card instances; shuffle and cut. No tables or games |
+| `internal/table` | The generic table: containers, card state, every physical action, permissions, visibility, per-player views |
+| `internal/presets` | Game setups built only from table actions |
 | `internal/server` | HTTP: pages, forms, the WebSocket, rate limits, security headers, graceful shutdown |
 | `web` | Templates, CSS and JavaScript, embedded in the binary |
 
@@ -67,6 +70,38 @@ One WebSocket per open tab at `/l/<code>/ws`. Messages are JSON text frames, at 
 
 **Lobby actions:** `lobby.seat {player?, seat}`, `lobby.team {player, team}`, `lobby.ready {ready}`, `lobby.rename {name}`, `lobby.kick {player}`, `lobby.leave`, `lobby.owner {player}`, `lobby.settings {...}`, `lobby.end`, `state.sync` (no change; returns the current revision).
 
-## 5. Known limits
+## 5. Cards and the table
+
+**Definitions and instances.** A `cards.Def` is a face (rank, suit, color). A `cards.Card` is one physical card: a random ID, a face, and which deck it came from, so two decks' Aces of Spades are different cards. Deck types: `standard52`, `standard54`, `euchre24`, `color108` (a generic 108-card color/number/action deck), `custom` (chosen ranks and suits, 0-4 jokers), each 1-8 times.
+
+**Where, who, and who sees** are separate:
+- *Location:* every card is in exactly one container. `Stack` is an ordered pile (the last card is the top); `Hand` is a player's private hand; `Grid` is fixed slots (Golf's 2x3, the Hold'em board).
+- *Authority:* a container with an `Owner` can be taken from, managed and peeked into only by that owner. Anyone seated can *put* cards into it (giving, dealing). Shared containers have four access levels, `Take`, `Place`, `Manage` (shuffle, cut, deal, collect) and `Peek`, each `anyone`, `dealer` or `nobody`. The lobby's *shared* policy turns `dealer` into `anyone`, and never touches personal containers. Being the lobby owner grants nothing here, except gathering every card back at the end of a hand and naming the dealer.
+- *Visibility:* a card is visible to a player if it's face up, it's in their own hand, or they peeked at it. Peeks are forgotten when the card leaves its container or its pile is shuffled or cut. Every peek is announced in the history.
+
+**Atomic actions.** The lobby runs every table action on a deep copy of the table. If the action fails, or the copy fails `Check()` (every card in exactly one slot of the container it records), the copy is thrown away and nothing changed. Multi-card actions (a whole deal, gathering everything) are therefore all-or-nothing. A step-by-step deal is a small state machine (`PendingDeal`): each packet is its own atomic action, and nothing else can deal from, shuffle or cut that pile meanwhile.
+
+**Referring to cards.** A client names a card by ID when it can see it, and by position otherwise (`index`, or `-1` for the top). A position in an ordered container is refused as `stale` if the container changed after the revision the client sent. The top card and grid slots never go stale. Hidden IDs are never sent, so a client can't name a card it hasn't seen.
+
+**Cuts.** `Cut(k)` lifts the top `k` cards and puts them underneath (a rotation, not a shuffle). An offered cut (`cut.offer`) blocks the pile until the chosen player cuts (`cut.answer {count}`) or declines (`count: 0`), or the dealer withdraws the offer.
+
+**Deals.** `deal.start` takes the source pile, the recipients in dealing order (hands, grids or shared piles), and `passes`: per pass, either one packet size for everyone or one per recipient (`[[2,3,2,3],[3,2,3,2]]`). Face up/down, and all at once or `step` (then `deal.step {all}` / `deal.cancel`). Grids fill their first empty slots.
+
+**Undo.** Only the last action on the lobby, only by the player who did it, and only if no card became visible to anyone new (compared before and after for every card and player). A draw, a face-up play or a peek can't be undone: the information is out. Fix those forward with an ordinary move. Shuffles and cuts are never undoable.
+
+**Table actions:** `table.start`, `table.stop`, `table.reset`, `card.move {ref, to, index?, face?, displaceTo?}`, `card.flip {ref}`, `card.peek {ref}`, `card.draw {from, to?, count, face?}`, `card.blind_draw {from, index}` (Old Maid; only when the lobby allows it), `hand.reveal {up}`, `hand.sort {by}`, `pile.shuffle`, `pile.cut {container, count}`, `pile.collect {from, to}`, `pile.collect_all {to}`, `pile.create`, `pile.remove`, `cut.offer {container, to}`, `cut.answer {count}`, `cut.cancel`, `deal.start`, `deal.step {all}`, `deal.cancel`, `dealer.set {player}`, `dealer.pass`, `turn.set {player}`, `turn.advance {dir}`, `action.undo`.
+
+## 6. Hidden information
+
+Hidden cards aren't hidden with CSS: they aren't sent. `Table.ViewFor(player)` builds each player's view:
+- A card the viewer may not know is sent as `{"i": <position>}` (plus `up: false`): no ID, no face. IDs are random and only sent for cards the viewer can see, so a hidden card can't be followed from one place to another.
+- A closed pile (deck, discard, kitty) sends its count and its top card only. Grids, hands and spread piles send every slot.
+- A peeked card shows its face to the peeker only (`mine: true`), and nothing to anyone else.
+- The history is written by the server and only names cards that are face up at that moment; it never holds a hidden identity, so it needs no filtering.
+- Nothing else carries card data: pages are server-rendered without game state, the browser stores nothing but the HttpOnly session cookie, and errors never name hidden cards.
+
+`internal/lobby/game_test.go` checks each player's actual JSON snapshot for every hidden card's ID and face, after shuffles, deals, plays, blind draws and refused actions, and fails if any appear.
+
+## 7. Known limits
 
 - State is in memory only: a restart ends every lobby.

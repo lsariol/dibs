@@ -83,3 +83,9 @@ export function select(options, value) {
 export function numberInput(value, min, max) {
   return h('input', { type: 'number', inputmode: 'numeric', value, min, max });
 }
+
+// confirmThen asks a yes/no question and runs fn on yes.
+export function confirmThen(question, fn) {
+  sheet('Are you sure?', h('p', {}, question), h('div', { class: 'row' },
+    btn('Yes', () => { closeSheet(); fn(); }), btn('Cancel', closeSheet, 'secondary')));
+}

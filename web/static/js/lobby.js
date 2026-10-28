@@ -42,6 +42,7 @@ export function renderLobby(app) {
     owner ? h('section', { class: 'panel' },
       h('h2', {}, 'Owner'),
       h('div', { class: 'stack' },
+        btn('Start the table', () => app.act('table.start'), 'big'),
         btn('Lobby settings', () => settingsSheet(app), 'secondary'))) :
       h('p', { class: 'muted center-text' }, `Waiting for ${app.playerName(L.owner)} to start the table.`));
 }
