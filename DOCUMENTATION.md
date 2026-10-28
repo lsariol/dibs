@@ -41,6 +41,11 @@ Lighthouse deploys Dibs from its repository; nothing is set up on the server for
 - **No secrets, no database, no volumes.** Nothing in Cove.
 - **Label** `com.mobasity.public-url: https://dibs.mobasity.com`, written as a map (Lighthouse doesn't read list-form labels), so Sonar checks it from outside.
 - **WebSockets through Cloudflare** need nothing special. Dibs pings every connection well inside Cloudflare's 100-second idle timeout.
+- **Graceful shutdown:** on SIGTERM the server stops accepting connections and closes open WebSockets (their requests' context ends); in-memory lobbies end with it.
+- **Headers:** a strict Content Security Policy (scripts, styles and connections from the same origin only, no inline code, no framing), `nosniff`, `Referrer-Policy: same-origin`, and HSTS when the public URL is https.
+- **Static files** are served under `/static/<version>/…` and cached for a year; each release changes the path.
+
+**Before the first deploy** (Lu's steps, in `prod-rollout-plan.md` Appendix B): the GitHub repository, the `lighthouse-publisher` App and rulesets, `lh add` **before** any tag exists (so `v0.0.0` is deployed and published, not taken as a baseline), the Cloudflare public hostname `dibs.mobasity.com` → `http://dibs:2600`, then the `v0.0.0` tag.
 
 ## 3. Lobbies and sessions
 
@@ -70,7 +75,7 @@ One WebSocket per open tab at `/l/<code>/ws`. Messages are JSON text frames, at 
 - Each lobby has one lock. An action is authorized, validated and applied entirely under it, then the revision goes up by one and every connection gets its new snapshot. A failed action changes nothing (not even the history).
 - **Duplicates:** the server remembers each player's last 128 request IDs and their results. A retry (the client resends anything unanswered after a reconnect) returns the first result with `"duplicate": true` instead of acting twice.
 - **Slow phones:** a connection holds only the newest unsent snapshot, so a slow client skips stale ones instead of queueing them. Results queue up to 32; a client that can't keep up is disconnected and catches up on reconnect.
-- **Flooding:** each connection gets 10 actions a second (bursts of 40); beyond that, actions are refused with a message.
+- **Flooding:** each connection gets 10 actions a second (bursts of 40); beyond that, actions are refused with a message. A player can have at most 5 tabs connected; a sixth is told to close one.
 - Pings every 25 seconds keep the connection alive through Cloudflare.
 - Error codes: `bad_request` (malformed), `forbidden` (not allowed for you), `not_found`, `invalid` (not valid right now), `stale` (based on an old view; the client should retry with the new state), `full`.
 
@@ -139,4 +144,12 @@ A preset (`internal/presets`) sets up a table for a game and, optionally, guides
 
 ## 9. Known limits
 
-- State is in memory only: a restart ends every lobby.
+- **Memory only.** A restart or deploy ends every lobby in progress (players see "Session over"). Deploy when nobody is playing. Persistence would go behind the `Lobby`/`Manager` boundary.
+- **One instance.** Lobbies live in one process; Dibs can't be scaled out without moving state to a shared store.
+- **No rules enforcement.** Turns are only an indicator; Euchre's follow-suit, trump ranking and trick winners are the players' call (they pick who won each trick); Hold'em has no betting or hand ranking; Blackjack has no bets, payouts or house rules. These belong in a later automated mode built on the same table actions.
+- **Undo** takes back only the latest action in the lobby, by the player who did it, and only if it revealed nothing. Everything else is fixed forward (move the card back; score corrections are reverts).
+- **Seats are fixed while the table runs.** Someone who joins mid-game watches (public cards only) until the owner returns everyone to the lobby and starts again; scores carry over.
+- **One seat per browser per lobby.** The session is a cookie; clearing it, or switching browsers, means joining again as a new player (the owner can remove the old one). Sessions last 24 hours.
+- **Hidden cards can be named by position.** A player can refer to an unseen card only by its position (as you'd point at a card back); positions in a pile that changed since the player's last view are refused as stale.
+- **Taps only.** Every action is a tap and a choice; there's no drag and drop, animation or sound.
+- **Not tested:** screen readers (cards and buttons have labels, but nobody has played with one), and real phones on mobile networks behind Cloudflare. Browser tests ran in Chromium at 320 and 390 px wide, light and dark.

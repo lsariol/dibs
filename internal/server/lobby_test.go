@@ -73,6 +73,7 @@ type ws struct {
 	conn  *websocket.Conn
 	state map[string]any
 	n     int
+	raw   []string // every message received, as sent
 }
 
 func (c *client) dial() *ws {
@@ -100,6 +101,7 @@ func (w *ws) read() map[string]any {
 	if err != nil {
 		w.t.Fatalf("read: %v", err)
 	}
+	w.raw = append(w.raw, string(data))
 	var m map[string]any
 	if err := json.Unmarshal(data, &m); err != nil {
 		w.t.Fatal(err)
@@ -110,9 +112,12 @@ func (w *ws) read() map[string]any {
 	return m
 }
 
-// waitState reads until a state satisfies ok.
+// waitState returns the latest state if it satisfies ok, else reads until one does.
 func (w *ws) waitState(ok func(map[string]any) bool) map[string]any {
 	w.t.Helper()
+	if w.state != nil && ok(w.state) {
+		return w.state
+	}
 	for range 200 {
 		m := w.read()
 		if m["type"] == "state" && ok(m) {

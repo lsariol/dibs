@@ -3,6 +3,8 @@ package lobby
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand/v2"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -311,8 +313,13 @@ func TestNextHandGathersAndPassesTheDeal(t *testing.T) {
 	mustOK(t, l.Do(ids[1], req("card.draw", map[string]any{"from": "deck", "count": 4})))
 	mustOK(t, l.Do(ids[2], req("card.draw", map[string]any{"from": "deck", "to": "play", "count": 2, "face": "up"})))
 	mustFail(t, l.Do(ids[1], req("round.next", map[string]any{"to": "deck"})), CodeForbidden)
+	l.game.table.Markers["trump"] = "S"
+	l.game.table.Counters["tricks:A"] = 3
 	mustOK(t, l.Do(ids[0], req("round.next", map[string]any{"to": "deck"})))
 	tb := l.game.table
+	if len(tb.Markers) != 0 || len(tb.Counters) != 0 {
+		t.Fatal("a new hand keeps the last hand's markers")
+	}
 	if tb.Container("deck").Count() != 52 || tb.DealerID() != ids[1] {
 		t.Fatalf("deck %d, dealer %s", tb.Container("deck").Count(), tb.DealerID())
 	}
@@ -357,4 +364,73 @@ func TestSnapshotsHaveNoNullLists(t *testing.T) {
 	check(l, ids[0])
 	mustOK(t, l.Do(ids[0], req("score.add", map[string]any{"entry": ids[1], "delta": 1})))
 	check(l, ids[1])
+}
+
+// TestRandomRequestsNeverBreakTheTable throws random and malformed requests
+// at every action, as every player, and checks nothing panics and the table
+// stays whole.
+func TestRandomRequestsNeverBreakTheTable(t *testing.T) {
+	for _, preset := range []string{"blank", "euchre", "holdem", "golf", "blackjack"} {
+		_, l, ids := newLobby(t, Settings{Preset: preset, BlindDraw: true, ScoreMode: ScoreOwner}, "Ann", "Bob", "Cy", "Dee")
+		mustOK(t, l.Do(ids[0], req("table.start", nil)))
+		var names []string
+		for n := range handlers {
+			if n != "lobby.end" && n != "lobby.leave" && n != "lobby.kick" && n != "table.stop" {
+				names = append(names, n)
+			}
+		}
+		slices.Sort(names)
+		r := rand.New(rand.NewPCG(7, uint64(len(preset))))
+		var containers []string
+		for _, c := range l.game.table.Containers {
+			containers = append(containers, c.ID)
+		}
+		pick := func(s []string) string { return s[r.IntN(len(s))] }
+		params := func() json.RawMessage {
+			m := map[string]any{}
+			for range r.IntN(5) {
+				switch r.IntN(10) {
+				case 0:
+					m["ref"] = map[string]any{"container": pick(containers), "index": r.IntN(8) - 1}
+				case 1:
+					m["to"] = pick(containers)
+				case 2:
+					m["from"] = pick(containers)
+				case 3:
+					m["container"] = pick(containers)
+				case 4:
+					m["count"] = r.IntN(60) - 5
+				case 5:
+					m["player"] = pick(ids)
+				case 6:
+					m["step"] = pick([]string{"deal", "pass", "order", "pickup", "turn_down", "call", "take_trick", "score", "next", "street", "fold", "start", "reveal", "hit", "stand", "hole", "collect", "reshoe", "bogus"})
+				case 7:
+					m["args"] = map[string]any{"pattern": pick([]string{"3-2", "2s", "x"}), "player": pick(ids), "cards": r.IntN(4), "suit": pick([]string{"S", "H", "X"}), "alone": r.IntN(2) == 0}
+				case 8:
+					m["passes"] = [][]int{{r.IntN(4)}, {r.IntN(3), r.IntN(3), r.IntN(3), r.IntN(3)}}
+					m["to"] = []string{pick(containers), pick(containers)}
+				case 9:
+					m["face"] = pick([]string{"up", "down", "", "sideways"})
+				}
+			}
+			b, _ := json.Marshal(m)
+			if r.IntN(20) == 0 {
+				return json.RawMessage(`{"broken":`)
+			}
+			return b
+		}
+		for i := range 3000 {
+			rq := Request{ID: fmt.Sprintf("x%d", i), Rev: l.Rev() - uint64(r.IntN(2)), Action: pick(names), Params: params()}
+			l.Do(pick(ids), rq)
+			if l.State == Playing {
+				if err := l.game.table.Check(); err != nil {
+					t.Fatalf("%s step %d (%s): %v", preset, i, rq.Action, err)
+				}
+				if len(l.game.table.Cards) == 0 {
+					t.Fatalf("%s: no cards", preset)
+				}
+			}
+		}
+		noLeaks(t, l, ids)
+	}
 }

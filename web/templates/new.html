@@ -18,11 +18,12 @@
       <select name="maxPlayers">
         {{$m := .Settings.MaxPlayers}}{{range $n := seq 2 8}}<option value="{{$n}}"{{if eq $n $m}} selected{{end}}>{{$n}}</option>{{end}}
       </select>
-      <small>Euchre is always 4.</small>
+      <small>Euchre is always 4. You can change this later.</small>
     </label>
     <fieldset>
       <legend>Who can change scores</legend>
       {{$s := .Settings.ScoreMode}}
+      <label class="check"><input type="radio" name="scoreMode" value=""{{if eq $s ""}} checked{{end}}> Usual for the game: team scorekeepers for Euchre, everyone their own for the others</label>
       <label class="check"><input type="radio" name="scoreMode" value="team"{{if eq $s "team"}} checked{{end}}> Team: one scorekeeper per team, picked by the owner</label>
       <label class="check"><input type="radio" name="scoreMode" value="owner"{{if eq $s "owner"}} checked{{end}}> Owner: only you</label>
       <label class="check"><input type="radio" name="scoreMode" value="solo"{{if eq $s "solo"}} checked{{end}}> Solo: everyone keeps their own score (scores are per player, even in team games)</label>

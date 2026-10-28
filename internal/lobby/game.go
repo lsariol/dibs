@@ -372,6 +372,8 @@ func init() {
 		if err := t.CollectAll(c.p.ID, a.To, true); err != nil {
 			return err
 		}
+		clear(t.Markers)
+		clear(t.Counters)
 		if t.DealerID() != "" {
 			return t.PassDeal(c.p.ID, true)
 		}

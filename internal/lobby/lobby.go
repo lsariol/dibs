@@ -27,6 +27,7 @@ const (
 	dedupKeep   = 128
 	CodeLength  = 6
 	maxRequestB = 16 << 10
+	MaxTabs     = 5 // open connections per player
 )
 
 // Teams are the team IDs players can be put in.
@@ -248,6 +249,9 @@ func (l *Lobby) Attach(playerID string, s Subscriber) error {
 	p := l.player(playerID)
 	if p == nil || l.State == Ended {
 		return errorf(CodeForbidden, "You're no longer in this lobby.")
+	}
+	if len(p.subs) >= MaxTabs {
+		return errorf(CodeInvalid, "This lobby is open in too many tabs. Close one and reload.")
 	}
 	wasConnected := p.Connected()
 	p.subs[s] = struct{}{}
