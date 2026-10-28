@@ -1,0 +1,11 @@
+# Local run on Docker Desktop, on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Then open http://localhost:2601 (on the PC only).
+services:
+  dibs:
+    ports:
+      - "127.0.0.1:2601:2600"
+    environment:
+      - APP_ENV=dev
+      - DIBS_PUBLIC_URL=http://localhost:2601
+      - DIBS_CLIENT_IP_HEADER=
