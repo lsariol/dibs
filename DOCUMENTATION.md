@@ -11,7 +11,8 @@ How Dibs works inside, for whoever changes it next. The README covers running it
 5. [Cards and the table](#5-cards-and-the-table)
 6. [Hidden information](#6-hidden-information)
 7. [Scores](#7-scores)
-8. [Known limits](#8-known-limits)
+8. [Game presets](#8-game-presets)
+9. [Known limits](#9-known-limits)
 
 ## 1. Overview
 
@@ -122,6 +123,20 @@ Hidden cards aren't hidden with CSS: they aren't sent. `Table.ViewFor(player)` b
 
 **Score actions:** `score.add {entry, delta, reason?}`, `score.revert {change}`, `score.reset`, `score.keeper {team, player}`, `score.target {target}`. Entry IDs are player IDs or `team:<A-D>`.
 
-## 8. Known limits
+## 8. Game presets
+
+A preset (`internal/presets`) sets up a table for a game and, optionally, guides the players through it. It has no card engine of its own: setup adds containers and cards through the table API, and every guided step is either an ordinary table action or a preset step (`preset.step {step, args}`) that calls the same table functions, with the same permission checks. Nothing is automatic: each step is a button someone presses, the generic actions stay available for house rules, and turns aren't enforced. Each snapshot carries the viewer's `guide`: a status line, an optional hint, and the buttons that apply to them now.
+
+| Preset | Setup | Guided steps |
+|---|---|---|
+| **Blank table** (2-8) | The lobby's deck (any type, 1-8 decks), Discard, an open Table area, hands, optional personal grids | None; anything goes |
+| **Euchre** (4) | 24-card deck, a spread Trick pile, a won-tricks pile per team, hands; partners opposite (the lobby pairs seats 1&3 and 2&4 if teams aren't already set that way); team scoring to 10 | Shuffle; offer the cut to the dealer's right; deal clockwise from the dealer's left in two passes (3-2/2-3, 2-3/3-2, 2s then 3s, 3s then 2s; all at once or packet by packet); turn up the top of the 4-card kitty; round 1 pass / order up / pick up, alone or not; dealer picks up and discards (an ordinary move, so cards are never teleported); turn it down; round 2 call any other suit; throw in the hand if all pass; award each trick to the player who won it (counted per team); score the hand (3-4 tricks 1 point, march 2, lone march 4, euchred 2 to the defenders) through the scoreboard's permissions; next hand (gather, pass the deal left) |
+| **Texas Hold'em** (2-8) | 52-card deck, a 5-slot Board, a Burn pile nobody can look at or take from, a Folded pile, hands; solo scores for chip counts | Shuffle, offer the cut; deal two hole cards one at a time from the dealer's left; burn and flop / turn / river; show my cards; fold; next hand (the button moves left). The status line names the button and blinds (heads-up, the button is the small blind). No betting, pot or hand ranking |
+| **Six-card Golf** (2-8) | 52-card deck (two past four players), face-up Discard, a 2x3 grid and a hand per player; solo scores | Deal six to each grid face down (unknown even to their owner); turn up the first discard; turn all my cards up; record my score by the common count (A 1, 2 −2, J/Q 10, K 0, a matching column 0) as a suggestion, or enter scores by hand; next hole. Flips, draws and swaps are ordinary actions |
+| **Blackjack** (2-8) | A shoe of the lobby's deck count, the Dealer's hand (spread, hole card face down, only the dealer may peek), a Discard, a face-up spot per player; solo scores | Deal the round (one up to each player and the dealer, then again with the dealer's face down); hit me / stand (players, own spot only, not after standing); hit a player or the dealer, peek at and turn over the hole card (dealer); collect; shuffle the discards back into the shoe. No bets or payouts |
+
+**Adding a preset:** add a file in `internal/presets` with a type implementing `Preset` (`Info`, `Setup`) and, for guidance, `Guided` (`Guide`, `Do`); call `register` in its `init` and add its ID to `order`. Build the table only with `table` functions; use `Transfer` only for a procedure the preset has already authorized (a Blackjack hit from the dealer's shoe). Score through `env.AddScore`, never the board directly. Add a lobby test that plays it through `Lobby.Do`, with `noLeaks` after anything that moves cards.
+
+## 9. Known limits
 
 - State is in memory only: a restart ends every lobby.

@@ -19,6 +19,11 @@ The first version: a multiplayer card table for phones, at dibs.mobasity.com.
 - Offering the cut: the dealer offers a chosen player the cut, and nothing is dealt from that pile until they cut or decline.
 - Hidden cards never leave the server: each phone receives only the cards its player may see. Others' hands, face-down cards and the deck's order are sent as plain counts and backs, with nothing that could identify or track a card.
 - The table on your phone: shared piles on the felt, the other players' hands as card backs, your own hand and grid at the bottom. Tap a card or pile to see what you can do with it; nothing needs dragging.
+- Euchre, guided from shuffle to 10 points: partners across the table, the cut offered to the dealer's right, a real two-pass deal from the dealer's left (3-2 or 2-3, or 2s then 3s), the upcard on the kitty, ordering up or calling trump, alone or not, the dealer's pickup and discard, tricks awarded to whoever won them, and the hand scored by the rules (1, 2, 4 for a lone march, 2 for a euchre).
+- Texas Hold'em: two hole cards dealt one at a time, burn and flop, turn and river onto a five-card board, a burn pile nobody can look at, folding, showing your cards, and the button and blinds moving each hand.
+- Six-card Golf: a face-down 2x3 grid each, flips, draws from the deck or the discard, swaps into your grid, and an optional score by the common count.
+- Blackjack: a shoe of one or more decks, the dealer's hole card (only the dealer can peek), hit and stand, collecting the round and reshuffling the discards.
+- A game guide on the table: where the hand is, and buttons for the usual next steps. Every button is an ordinary action anyone could take by hand; nothing is forced or automatic.
 - A blank table for improvising any game: the lobby's deck, a discard pile, an open play area, hands, and optional personal grids; the dealer or owner can add more piles and rows of slots during play.
 - Dealer and turn markers, passing the deal to the left, and a fresh table with the same seats.
 - Next hand in one tap: every card goes back to the deck face down and the deal passes to the left, ready to shuffle and offer the cut again.
