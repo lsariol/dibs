@@ -70,11 +70,11 @@ func TestHealth(t *testing.T) {
 
 func TestStatic(t *testing.T) {
 	ts := newTestServer(t)
-	resp, body := get(t, ts.URL+"/static/css/dibs.css")
+	resp, body := get(t, ts.URL+"/static/test/css/dibs.css")
 	if resp.StatusCode != 200 || !strings.Contains(body, "--accent") {
 		t.Fatalf("css: %d", resp.StatusCode)
 	}
-	if resp, _ := get(t, ts.URL+"/static/css/"); resp.StatusCode != 404 {
+	if resp, _ := get(t, ts.URL+"/static/test/css/"); resp.StatusCode != 404 {
 		t.Fatalf("directory listing: %d, want 404", resp.StatusCode)
 	}
 }

@@ -1,0 +1,62 @@
+{{define "title"}}Create a lobby · dibs{{end}}
+{{define "content"}}
+<main class="page">
+  <a class="home" href="/">dibs</a>
+  <h1>Create a lobby</h1>
+  {{with .Data}}
+  {{if .Error}}<p class="error" role="alert">{{.Error}}</p>{{end}}
+  <form method="post" action="/new" class="form">
+    <label>Your name
+      <input name="name" value="{{.Name}}" maxlength="20" required autocomplete="nickname" autofocus>
+    </label>
+    <label>Game
+      <select name="preset">
+        {{$p := .Settings.Preset}}{{range .Presets}}<option value="{{.ID}}"{{if eq .ID $p}} selected{{end}}>{{.Name}}</option>{{end}}
+      </select>
+    </label>
+    <label>Most players
+      <select name="maxPlayers">
+        {{$m := .Settings.MaxPlayers}}{{range $n := seq 2 8}}<option value="{{$n}}"{{if eq $n $m}} selected{{end}}>{{$n}}</option>{{end}}
+      </select>
+      <small>Euchre is always 4.</small>
+    </label>
+    <fieldset>
+      <legend>Who can change scores</legend>
+      {{$s := .Settings.ScoreMode}}
+      <label class="check"><input type="radio" name="scoreMode" value="team"{{if eq $s "team"}} checked{{end}}> Team: one scorekeeper per team, picked by the owner</label>
+      <label class="check"><input type="radio" name="scoreMode" value="owner"{{if eq $s "owner"}} checked{{end}}> Owner: only you</label>
+      <label class="check"><input type="radio" name="scoreMode" value="solo"{{if eq $s "solo"}} checked{{end}}> Solo: everyone keeps their own score (scores are per player, even in team games)</label>
+    </fieldset>
+    <details>
+      <summary>More options</summary>
+      <fieldset>
+        <legend>Shared piles</legend>
+        {{$pol := .Settings.Policy}}
+        <label class="check"><input type="radio" name="policy" value="strict"{{if eq $pol "strict"}} checked{{end}}> Dealer runs the deck (normal)</label>
+        <label class="check"><input type="radio" name="policy" value="shared"{{if eq $pol "shared"}} checked{{end}}> Anyone can shuffle, deal and collect shared piles. Hands stay private either way</label>
+      </fieldset>
+      <label>Deck (blank table and blackjack)
+        <select name="deckType">
+          {{$d := .Settings.DeckType}}{{range .Decks}}<option value="{{.ID}}"{{if eq .ID $d}} selected{{end}}>{{.Name}}</option>{{end}}
+        </select>
+      </label>
+      <label>Number of decks
+        <select name="deckCount">
+          {{$c := .Settings.DeckCount}}{{range $n := seq 1 8}}<option value="{{$n}}"{{if eq $n $c}} selected{{end}}>{{$n}}</option>{{end}}
+        </select>
+      </label>
+      <label>Personal grid per player (blank table)
+        <select name="gridRows">
+          {{$r := .Settings.GridRows}}<option value="0"{{if eq $r 0}} selected{{end}}>None</option>{{range $n := seq 1 4}}<option value="{{$n}}"{{if eq $n $r}} selected{{end}}>{{$n}} row{{if gt $n 1}}s{{end}}</option>{{end}}
+        </select>
+        <select name="gridCols">
+          {{$c := .Settings.GridCols}}<option value="0"{{if eq $c 0}} selected{{end}}>None</option>{{range $n := seq 1 6}}<option value="{{$n}}"{{if eq $n $c}} selected{{end}}>{{$n}} column{{if gt $n 1}}s{{end}}</option>{{end}}
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" name="blindDraw"{{if .Settings.BlindDraw}} checked{{end}}> Allow drawing an unseen card from another player's hand (Old Maid)</label>
+    </details>
+    <button class="btn big" type="submit">Create Lobby</button>
+  </form>
+  {{end}}
+</main>
+{{end}}

@@ -1,0 +1,21 @@
+{{define "title"}}Join a lobby · dibs{{end}}
+{{define "content"}}
+<main class="page">
+  <a class="home" href="/">dibs</a>
+  {{with .Data}}
+  <h1>{{if .Code}}Join lobby {{.Code}}{{else}}Join a lobby{{end}}</h1>
+  {{if .Error}}<p class="error" role="alert">{{.Error}}</p>{{end}}
+  <form method="post" action="{{if .Code}}/l/{{.Code}}/join{{else}}/join{{end}}" class="form">
+    {{if not .Code}}
+    <label>Lobby code
+      <input name="code" maxlength="9" required autocapitalize="characters" autocomplete="off" spellcheck="false" class="code" autofocus>
+    </label>
+    {{end}}
+    <label>Your name
+      <input name="name" value="{{.Name}}" maxlength="20" required autocomplete="nickname"{{if .Code}} autofocus{{end}}>
+    </label>
+    <button class="btn big" type="submit">Join</button>
+  </form>
+  {{end}}
+</main>
+{{end}}

@@ -23,6 +23,16 @@ type pageData struct {
 	Data    any
 }
 
+var templateFuncs = template.FuncMap{
+	"seq": func(from, to int) []int {
+		var out []int
+		for i := from; i <= to; i++ {
+			out = append(out, i)
+		}
+		return out
+	},
+}
+
 func loadPages(version string) (*pages, error) {
 	names, err := fs.Glob(web.FS, "templates/*.html")
 	if err != nil {
@@ -35,7 +45,7 @@ func loadPages(version string) (*pages, error) {
 		if name == "layout" {
 			continue
 		}
-		t, err := template.ParseFS(web.FS, "templates/layout.html", n)
+		t, err := template.New(name).Funcs(templateFuncs).ParseFS(web.FS, "templates/layout.html", n)
 		if err != nil {
 			return nil, fmt.Errorf("server: template %s: %w", name, err)
 		}
