@@ -283,3 +283,43 @@ func TestStaleAndUnauthorizedActionsChangeNothing(t *testing.T) {
 		t.Fatal("refused actions changed the revision")
 	}
 }
+
+func TestStepDealSurvivesDisconnect(t *testing.T) {
+	l, ids := startedLobby(t, Settings{}, "Ann", "Bob")
+	ann := ids[0]
+	sub := &fakeSub{}
+	_ = l.Attach(ann, sub)
+	mustOK(t, l.Do(ann, req("deal.start", table.DealPlan{From: "deck", To: []string{presets.HandID(ids[1]), presets.HandID(ann)}, Passes: [][]int{{2}, {3}}, Step: true})))
+	mustOK(t, l.Do(ann, req("deal.step", map[string]any{"all": false})))
+	l.Detach(ann, sub) // the dealer's phone locks mid-deal
+	if l.game.table.Dealing == nil || hand(l, ids[1]).Count() != 2 {
+		t.Fatal("a disconnect changed the deal")
+	}
+	again := &fakeSub{}
+	_ = l.Attach(ann, again)
+	if again.last(t)["table"].(map[string]any)["dealing"] == nil {
+		t.Fatal("the reconnected dealer doesn't see the deal in progress")
+	}
+	mustOK(t, l.Do(ann, req("deal.step", map[string]any{"all": true})))
+	if hand(l, ids[1]).Count() != 5 || hand(l, ann).Count() != 5 || l.game.table.Dealing != nil {
+		t.Fatal("finishing the deal after reconnecting")
+	}
+}
+
+func TestNextHandGathersAndPassesTheDeal(t *testing.T) {
+	l, ids := startedLobby(t, Settings{}, "Ann", "Bob", "Cy")
+	mustOK(t, l.Do(ids[1], req("card.draw", map[string]any{"from": "deck", "count": 4})))
+	mustOK(t, l.Do(ids[2], req("card.draw", map[string]any{"from": "deck", "to": "play", "count": 2, "face": "up"})))
+	mustFail(t, l.Do(ids[1], req("round.next", map[string]any{"to": "deck"})), CodeForbidden)
+	mustOK(t, l.Do(ids[0], req("round.next", map[string]any{"to": "deck"})))
+	tb := l.game.table
+	if tb.Container("deck").Count() != 52 || tb.DealerID() != ids[1] {
+		t.Fatalf("deck %d, dealer %s", tb.Container("deck").Count(), tb.DealerID())
+	}
+	// Bob is the dealer now and runs the next one.
+	mustOK(t, l.Do(ids[1], req("round.next", map[string]any{"to": "deck"})))
+	if tb := l.game.table; tb.DealerID() != ids[2] {
+		t.Fatal("deal didn't pass on again")
+	}
+	noLeaks(t, l, ids)
+}

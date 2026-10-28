@@ -204,3 +204,7 @@ body.app { padding-bottom: env(safe-area-inset-bottom); }
 .actionbar .btn { flex: none; }
 input[type=range] { padding: 0; min-height: var(--tap); }
 .hand .card.private::after { content: none; }
+.other .card { width: 36px; height: 51px; font-size: 13px; border-radius: 5px; }
+.other .card .suit { font-size: 13px; }
+.other .card.private::after { content: none; }
+.other .grid { gap: 4px; }
