@@ -13,13 +13,16 @@ import (
 type Config struct {
 	Env            string   // "prod" or "dev"
 	Version        string   // DIBS_VERSION, or "dev-<commit>" / "dev" for a local build
-	Addr           string   // listen address, e.g. ":2600"
+	Addr           string   // listen address, e.g. ":3180"
 	PublicURL      *url.URL // the address players open; share links, cookies and origin checks use it
 	ClientIPHeader string   // header carrying the real client IP behind a proxy; empty uses the connection's address
 }
 
-// DefaultAddr is the listen address when DIBS_ADDR isn't set.
-const DefaultAddr = ":2600"
+// DefaultAddr and DevAddr are the listen addresses when DIBS_ADDR isn't set.
+const (
+	DefaultAddr = ":3180"
+	DevAddr     = ":3181"
+)
 
 // Load reads the settings through getenv (os.Getenv outside tests).
 func Load(getenv func(string) string) (Config, error) {
@@ -40,6 +43,9 @@ func Load(getenv func(string) string) (Config, error) {
 	addr := strings.TrimSpace(getenv("DIBS_ADDR"))
 	if addr == "" {
 		addr = DefaultAddr
+		if env == "dev" {
+			addr = DevAddr
+		}
 	}
 
 	raw := strings.TrimSpace(getenv("DIBS_PUBLIC_URL"))
@@ -70,7 +76,7 @@ func (c Config) SecureCookies() bool { return c.PublicURL.Scheme == "https" }
 // HealthURL is where `dibs health` asks the running server, inside its container.
 func (c Config) HealthURL() string { return "http://127.0.0.1" + portOf(c.Addr) + "/health" }
 
-// portOf returns ":<port>" from a listen address such as ":2600" or "0.0.0.0:2600".
+// portOf returns ":<port>" from a listen address such as ":3180" or "0.0.0.0:3180".
 func portOf(addr string) string {
 	if i := strings.LastIndex(addr, ":"); i >= 0 {
 		return addr[i:]

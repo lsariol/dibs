@@ -33,10 +33,10 @@ One Go binary (`cmd/dibs`) serves server-rendered pages, static files and one We
 
 Lighthouse deploys Dibs from its repository; nothing is set up on the server for it besides the Cloudflare route.
 
-- **Compose project `dibs`**, one service `dibs` (container `dibs`) on the `spark` network, listening on 2600. The port is exposed, not published: the only way in is cloudflared, routing `dibs.mobasity.com` to `http://dibs:2600`.
+- **Compose project `dibs`**, one service `dibs` (container `dibs`) on the `spark` network, listening on 3180. The port is exposed, not published: the only way in is cloudflared, routing `dibs.mobasity.com` to `http://dibs:3180`.
 - **`x-lighthouse: {deploy: releases}`**: only `v*` tags on `main` deploy.
 - **Tests before every deploy:** the Dockerfile's `test` stage runs gofmt, vet and `go test -race`.
-- **Healthcheck:** `/dibs health` asks `http://127.0.0.1:2600/health` inside the container.
+- **Healthcheck:** `/dibs health` asks `http://127.0.0.1:3180/health` inside the container.
 - **Hardening:** read-only filesystem, user 10001, all capabilities dropped, `no-new-privileges`, 256 MB memory limit. Dibs writes nothing to disk.
 - **No secrets, no database, no volumes.** Nothing in Cove.
 - **Label** `com.mobasity.public-url: https://dibs.mobasity.com`, written as a map (Lighthouse doesn't read list-form labels), so Sonar checks it from outside.
@@ -45,7 +45,7 @@ Lighthouse deploys Dibs from its repository; nothing is set up on the server for
 - **Headers:** a strict Content Security Policy (scripts, styles and connections from the same origin only, no inline code, no framing), `nosniff`, `Referrer-Policy: same-origin`, and HSTS when the public URL is https.
 - **Static files** are served under `/static/<version>/…` and cached for a year; each release changes the path.
 
-**Before the first deploy** (Lu's steps, in `prod-rollout-plan.md` Appendix B): the GitHub repository, the `lighthouse-publisher` App and rulesets, `lh add` **before** any tag exists (so `v0.0.0` is deployed and published, not taken as a baseline), the Cloudflare public hostname `dibs.mobasity.com` → `http://dibs:2600`, then the `v0.0.0` tag.
+**Before the first deploy** (Lu's steps, in `prod-rollout-plan.md` Appendix B): the GitHub repository, the `lighthouse-publisher` App and rulesets, `lh add` **before** any tag exists (so `v0.0.0` is deployed and published, not taken as a baseline), the Cloudflare public hostname `dibs.mobasity.com` → `http://dibs:3180`, then the `v0.0.0` tag.
 
 ## 3. Lobbies and sessions
 
