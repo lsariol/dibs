@@ -208,3 +208,13 @@ input[type=range] { padding: 0; min-height: var(--tap); }
 .other .card .suit { font-size: 13px; }
 .other .card.private::after { content: none; }
 .other .grid { gap: 4px; }
+.scores { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 10px; font: inherit; color: var(--text); cursor: pointer; min-height: var(--tap); text-align: left; }
+.score-chip { padding: 2px 8px; border-radius: 6px; background: var(--bg); }
+.score-chip.lead { background: var(--focus); color: #000; }
+.score-list { list-style: none; padding: 0; margin: 0; }
+.score-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: var(--tap); border-bottom: 1px solid var(--line); padding: 4px 0; }
+.score-n { font-size: 22px; min-width: 2.5ch; text-align: right; }
+.sheet .score-row .btn { width: auto; min-width: 44px; }
+.log li { display: flex; gap: 8px; align-items: center; }
+.sheet .log .btn { width: auto; }
+.win { font-weight: 700; color: var(--accent); font-size: 18px; }

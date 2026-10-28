@@ -3,6 +3,7 @@
 import { h, btn, sheet, closeSheet, field, select, numberInput, toast, confirmThen } from './ui.js';
 import { cardEl, label } from './cards.js';
 import { guideBar } from './guide.js';
+import { scoreStrip } from './score.js';
 
 let app;
 let T;
@@ -19,6 +20,7 @@ export function renderTable(a) {
   return h('main', { class: 'table' },
     banners(),
     playersStrip(),
+    scoreStrip(app),
     guideBar(app),
     h('section', { class: 'felt', 'aria-label': 'Shared table' }, shared.map(containerEl)),
     othersEl(),

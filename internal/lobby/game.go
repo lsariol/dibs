@@ -3,6 +3,7 @@ package lobby
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/lsariol/dibs/internal/cards"
 	"github.com/lsariol/dibs/internal/presets"
@@ -32,6 +33,23 @@ func (l *Lobby) startGame() error {
 	if p == nil {
 		return errorf(CodeInvalid, "Unknown game %q.", l.Settings.Preset)
 	}
+	teamsBefore := map[*Player]string{}
+	for _, pl := range l.Players {
+		teamsBefore[pl] = pl.Team
+	}
+	failed := func(err error) error {
+		for pl, t := range teamsBefore {
+			pl.Team = t
+		}
+		return err
+	}
+	if p.Info().Teams {
+		l.pairPartners()
+	}
+	board, err := l.nextScore()
+	if err != nil {
+		return failed(err)
+	}
 	var seats []string
 	teams := map[string]string{}
 	for _, pl := range l.seated() {
@@ -47,7 +65,7 @@ func (l *Lobby) startGame() error {
 	t := table.New(seats, policy)
 	t.AllowBlindDraw = l.Settings.BlindDraw
 	t.Name = l.name
-	err := p.Setup(t, presets.Options{
+	err = p.Setup(t, presets.Options{
 		Seats:     seats,
 		Teams:     teams,
 		DeckType:  l.Settings.DeckType,
@@ -57,13 +75,45 @@ func (l *Lobby) startGame() error {
 		GridCols:  l.Settings.GridCols,
 	})
 	if err != nil {
-		return errorf(CodeInvalid, "%s.", err.Error())
+		return failed(errorf(CodeInvalid, "%s.", err.Error()))
 	}
 	if err := t.Check(); err != nil {
-		return fmt.Errorf("lobby: preset %s built a broken table: %w", p.Info().ID, err)
+		return failed(fmt.Errorf("lobby: preset %s built a broken table: %w", p.Info().ID, err))
 	}
 	l.game = &game{table: t, preset: p}
+	l.score = board
 	return nil
+}
+
+// pairPartners puts players sitting opposite each other on the same team
+// (A for the first seat, B for the next), unless they already are.
+func (l *Lobby) pairPartners() {
+	seated := l.seated()
+	n := len(seated)
+	if n < 4 || n%2 != 0 {
+		return
+	}
+	ok := true
+	for i, p := range seated {
+		q := seated[(i+n/2)%n]
+		if p.Team == "" || p.Team != q.Team || p.Team == seated[(i+1)%n].Team {
+			ok = false
+		}
+	}
+	if ok {
+		return
+	}
+	var a, b []string
+	for i, p := range seated {
+		if i%2 == 0 {
+			p.Team = "A"
+			a = append(a, p.Name)
+		} else {
+			p.Team = "B"
+			b = append(b, p.Name)
+		}
+	}
+	l.addLog("", "Partners sit opposite each other: team A is %s, team B is %s.", strings.Join(a, " & "), strings.Join(b, " & "))
 }
 
 // tableFn is one table action.

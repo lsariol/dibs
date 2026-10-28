@@ -1,7 +1,12 @@
 // The waiting room: players, seats, teams, settings and owner controls.
 import { h, btn, sheet, closeSheet, field, select } from './ui.js';
 
-const presetNames = { blank: 'Blank table', euchre: 'Euchre', holdem: "Texas Hold'em", golf: 'Six-card Golf', blackjack: 'Blackjack' };
+let presetNames = { blank: 'Blank table' };
+
+// setPresets takes the games the server offers; every snapshot carries them.
+export function setPresets(list) {
+  presetNames = Object.fromEntries((list || []).map((p) => [p.id, p.name]));
+}
 const scoreNames = { solo: 'everyone keeps their own score', team: 'a scorekeeper per team', owner: 'the owner keeps score' };
 
 export function settingsSummary(s) {

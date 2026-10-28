@@ -15,6 +15,7 @@ type view struct {
 	Log   []LogEntry  `json:"log"`
 	Table *table.View `json:"table"`
 	Undo  string      `json:"undo,omitempty"` // what the viewer can undo right now
+	Score *scoreView  `json:"score"`
 }
 
 type viewLobby struct {
@@ -67,6 +68,7 @@ func (l *Lobby) snapshot(p *Player) []byte {
 			v.Undo = g.undo.text
 		}
 	}
+	v.Score = l.scoreView(p.ID)
 	v.Log = l.log
 	if len(v.Log) > logShown {
 		v.Log = v.Log[len(v.Log)-logShown:]

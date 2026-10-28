@@ -6,7 +6,12 @@ How Dibs works inside, for whoever changes it next. The README covers running it
 
 1. [Overview](#1-overview)
 2. [Deployment](#2-deployment)
-3. [Known limits](#3-known-limits)
+3. [Lobbies and sessions](#3-lobbies-and-sessions)
+4. [Realtime protocol](#4-realtime-protocol)
+5. [Cards and the table](#5-cards-and-the-table)
+6. [Hidden information](#6-hidden-information)
+7. [Scores](#7-scores)
+8. [Known limits](#8-known-limits)
 
 ## 1. Overview
 
@@ -94,7 +99,7 @@ One WebSocket per open tab at `/l/<code>/ws`. Messages are JSON text frames, at 
 ## 6. Hidden information
 
 Hidden cards aren't hidden with CSS: they aren't sent. `Table.ViewFor(player)` builds each player's view:
-- A card the viewer may not know is sent as `{"i": <position>}` (plus `up: false`): no ID, no face. IDs are random and only sent for cards the viewer can see, so a hidden card can't be followed from one place to another.
+- A card the viewer may not know is sent as `{"i": <position>}`: no ID, no face. IDs are random and only sent for cards the viewer can see, so a hidden card can't be followed from one place to another.
 - A closed pile (deck, discard, kitty) sends its count and its top card only. Grids, hands and spread piles send every slot.
 - A peeked card shows its face to the peeker only (`mine: true`), and nothing to anyone else.
 - The history is written by the server and only names cards that are face up at that moment; it never holds a hidden identity, so it needs no filtering.
@@ -102,6 +107,21 @@ Hidden cards aren't hidden with CSS: they aren't sent. `Table.ViewFor(player)` b
 
 `internal/lobby/game_test.go` checks each player's actual JSON snapshot for every hidden card's ID and face, after shuffles, deals, plays, blind draws and refused actions, and fails if any appear.
 
-## 7. Known limits
+## 7. Scores
+
+`internal/scoring` is a generic scoreboard; the lobby keeps one per lobby, so scores survive a fresh table and going back to the lobby.
+
+- **Entries** are rebuilt from the seated players when the table starts, keeping existing scores: per player in *solo*, per team in *team*, and in *owner* per team when anyone is on a team, else per player.
+- **Who may change an entry** (checked by the server on every change, whatever the page shows):
+  - `solo`: each player, only their own entry, even in a team game (the page says so). The owner gets no exception.
+  - `team`: only the team's appointed scorekeeper, only that team's entry. When the table starts, each team without a valid keeper gets its first seated member; the owner can appoint another member (`score.keeper`). Owning the lobby doesn't bypass this.
+  - `owner`: only the lobby owner.
+- **History and corrections:** every change is recorded with who, when, how much and why. `score.revert {change}` adds an opposite change marked as a correction; whoever may edit that entry may revert it, once. `score.reset` (owner) zeroes the scores and clears the history.
+- **Preset scoring** (Euchre's hand results) goes through the same function as a manual change, so the same permissions apply.
+- **Target:** reaching it is shown to everyone; nothing ends automatically.
+
+**Score actions:** `score.add {entry, delta, reason?}`, `score.revert {change}`, `score.reset`, `score.keeper {team, player}`, `score.target {target}`. Entry IDs are player IDs or `team:<A-D>`.
+
+## 8. Known limits
 
 - State is in memory only: a restart ends every lobby.

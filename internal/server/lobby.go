@@ -45,7 +45,7 @@ var deckOptions = []presetOption{
 
 func (s *Server) handleNewForm(w http.ResponseWriter, r *http.Request) {
 	s.render(w, http.StatusOK, "new", formData{
-		Settings: lobby.Settings{Preset: presets.All()[0].Info().ID, MaxPlayers: presets.All()[0].Info().MaxPlayers, ScoreMode: lobby.ScoreTeam, Policy: lobby.PolicyStrict, DeckType: "standard52", DeckCount: 1},
+		Settings: lobby.Settings{Preset: presets.All()[0].Info().ID, MaxPlayers: presets.All()[0].Info().MaxPlayers, ScoreMode: presets.All()[0].Info().ScoreMode, Policy: lobby.PolicyStrict, DeckType: "standard52", DeckCount: 1},
 		Presets:  presetOptions(), Decks: deckOptions,
 	})
 }

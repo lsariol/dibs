@@ -31,6 +31,8 @@ let sheetEl = null;
 
 // sheet opens a bottom sheet with a title and content; it returns a close function.
 export function sheet(title, ...content) {
+  const refreshing = refreshingLive;
+  const scroll = refreshing && sheetEl ? sheetEl.querySelector('.sheet').scrollTop : 0;
   closeSheet();
   const close = () => closeSheet();
   sheetEl = h('div', { class: 'sheet-wrap', onclick: (e) => { if (e.target === sheetEl) close(); } },
@@ -39,15 +41,36 @@ export function sheet(title, ...content) {
       h('div', { class: 'sheet-body' }, ...content)));
   document.body.append(sheetEl);
   document.body.classList.add('noscroll');
-  const first = sheetEl.querySelector('.sheet-body button, .sheet-body input, .sheet-body select');
-  if (first) first.focus({ preventScroll: true });
+  if (refreshing) {
+    sheetEl.querySelector('.sheet').scrollTop = scroll;
+  } else {
+    const first = sheetEl.querySelector('.sheet-body button, .sheet-body input, .sheet-body select');
+    if (first) first.focus({ preventScroll: true });
+  }
   return close;
 }
 
 export function closeSheet() {
   if (sheetEl) sheetEl.remove();
   sheetEl = null;
+  live = null;
   document.body.classList.remove('noscroll');
+}
+
+let live = null;
+let refreshingLive = false;
+
+// liveSheet makes the open sheet redraw with every new state (the scoreboard);
+// call it right after opening the sheet.
+export function liveSheet(fn) { live = fn; }
+
+// refreshLiveSheet redraws a live sheet, keeping its scroll position.
+export function refreshLiveSheet() {
+  if (!live || !sheetEl) return;
+  const fn = live;
+  refreshingLive = true;
+  try { fn(); } finally { refreshingLive = false; }
+  live = fn;
 }
 
 export function sheetOpen() { return sheetEl !== null; }
