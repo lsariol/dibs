@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/lsariol/dibs/internal/lobby"
+	"github.com/lsariol/dibs/internal/presets"
 )
 
 const sessionCookie = "dibs_session"
@@ -26,12 +27,13 @@ type presetOption struct {
 	ID, Name string
 }
 
-var presetOptions = []presetOption{
-	{"euchre", "Euchre"},
-	{"holdem", "Texas Hold'em"},
-	{"golf", "Six-card Golf"},
-	{"blackjack", "Blackjack"},
-	{"blank", "Blank table"},
+// presetOptions lists the registered presets for the create form.
+func presetOptions() []presetOption {
+	var out []presetOption
+	for _, p := range presets.All() {
+		out = append(out, presetOption{p.Info().ID, p.Info().Name})
+	}
+	return out
 }
 
 var deckOptions = []presetOption{
@@ -43,8 +45,8 @@ var deckOptions = []presetOption{
 
 func (s *Server) handleNewForm(w http.ResponseWriter, r *http.Request) {
 	s.render(w, http.StatusOK, "new", formData{
-		Settings: lobby.Settings{Preset: "euchre", MaxPlayers: 4, ScoreMode: lobby.ScoreTeam, Policy: lobby.PolicyStrict, DeckType: "standard52", DeckCount: 1},
-		Presets:  presetOptions, Decks: deckOptions,
+		Settings: lobby.Settings{Preset: presets.All()[0].Info().ID, MaxPlayers: presets.All()[0].Info().MaxPlayers, ScoreMode: lobby.ScoreTeam, Policy: lobby.PolicyStrict, DeckType: "standard52", DeckCount: 1},
+		Presets:  presetOptions(), Decks: deckOptions,
 	})
 }
 
@@ -67,7 +69,7 @@ func (s *Server) handleNew(w http.ResponseWriter, r *http.Request) {
 	}
 	name := r.PostFormValue("name")
 	show := func(status int, msg string) {
-		s.render(w, status, "new", formData{Error: msg, Name: name, Settings: set, Presets: presetOptions, Decks: deckOptions})
+		s.render(w, status, "new", formData{Error: msg, Name: name, Settings: set, Presets: presetOptions(), Decks: deckOptions})
 	}
 	if !s.createLimit.allow(s.clientIP(r)) {
 		show(http.StatusTooManyRequests, "Too many lobbies created from here. Wait a few minutes and try again.")

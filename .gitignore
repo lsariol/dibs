@@ -8,3 +8,4 @@ coverage.*
 .vscode/
 .idea/
 DIBS_IMPLEMENTATION_BRIEF.md
+.playwright-mcp/

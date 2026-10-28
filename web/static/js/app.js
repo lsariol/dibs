@@ -1,6 +1,6 @@
 // Entry point: connects, keeps the newest snapshot and redraws on change.
 import { Net } from './net.js';
-import { h, btn, toast, sheet, closeSheet } from './ui.js';
+import { h, btn, toast, sheet, closeSheet, confirmThen } from './ui.js';
 import { renderLobby, settingsSummary } from './lobby.js';
 import { renderTable } from './table.js';
 
@@ -97,11 +97,6 @@ function openMenu() {
   items.push(btn('Leave lobby', () => confirmThen('Leave this lobby? Your seat and cards are given up.', () => app.act('lobby.leave')), 'danger'));
   if (app.isOwner()) items.push(btn('End lobby for everyone', () => confirmThen('End the lobby for everyone?', () => app.act('lobby.end')), 'danger'));
   sheet('Menu', h('div', { class: 'stack' }, items));
-}
-
-export function confirmThen(question, fn) {
-  sheet('Are you sure?', h('p', {}, question), h('div', { class: 'row' },
-    btn('Yes', () => { closeSheet(); fn(); }), btn('Cancel', closeSheet, 'secondary')));
 }
 
 function openLog() {

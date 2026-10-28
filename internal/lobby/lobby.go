@@ -92,6 +92,7 @@ type Lobby struct {
 	noConnsAt time.Time // when the last connection closed; zero while anyone is connected
 	shareURL  string
 	now       func() time.Time
+	game      *game // the running table, while Playing
 }
 
 func hashToken(token string) [32]byte { return sha256.Sum256([]byte(token)) }
@@ -251,7 +252,6 @@ func (l *Lobby) Attach(playerID string, s Subscriber) error {
 	l.touch()
 	l.connectionsChanged()
 	if !wasConnected {
-		l.rev++
 		l.broadcast()
 	} else {
 		s.SendState(l.snapshot(p))
@@ -260,7 +260,9 @@ func (l *Lobby) Attach(playerID string, s Subscriber) error {
 }
 
 // Detach removes a connection. A closed connection is never a leave: the
-// player keeps their seat and cards and can reconnect.
+// player keeps their seat and cards and can reconnect. Connection changes are
+// broadcast without a new revision: they aren't table state, and a new
+// revision would cancel someone's chance to undo.
 func (l *Lobby) Detach(playerID string, s Subscriber) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -275,7 +277,6 @@ func (l *Lobby) Detach(playerID string, s Subscriber) {
 	l.touch()
 	l.connectionsChanged()
 	if !p.Connected() && !p.Gone && l.State != Ended {
-		l.rev++
 		l.broadcast()
 	}
 }
