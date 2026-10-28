@@ -1,0 +1,9 @@
+{{define "title"}}{{.Data.Code}} · dibs{{end}}
+{{define "bodyclass"}}app{{end}}
+{{define "content"}}
+<div id="app" data-code="{{.Data.Code}}">
+  <noscript><p class="page">Dibs needs JavaScript to show the table.</p></noscript>
+  <p class="page muted" id="boot">Connecting…</p>
+</div>
+{{end}}
+{{define "scripts"}}<script type="module" src="/static/{{.Version}}/js/app.js"></script>{{end}}

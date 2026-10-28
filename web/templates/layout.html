@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>{{block "title" .}}dibs{{end}}</title>
-<link rel="stylesheet" href="/static/css/dibs.css?v={{.Version}}">
+<link rel="stylesheet" href="/static/{{.Version}}/css/dibs.css">
 </head>
 <body class="{{block "bodyclass" .}}{{end}}">
 {{template "content" .}}
+{{block "scripts" .}}{{end}}
 </body>
 </html>{{end}}
